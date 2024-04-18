@@ -1,8 +1,8 @@
 """Create calculation table
 
-Revision ID: 50c24e52b72b
+Revision ID: 592978cc0906
 Revises: 
-Create Date: 2024-04-14 18:28:32.994647
+Create Date: 2024-04-18 17:09:04.654725
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision = '50c24e52b72b'
+revision = '592978cc0906'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('expression', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('result', sa.Float(), nullable=True),
+    sa.Column('result', sa.Numeric(scale=10), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

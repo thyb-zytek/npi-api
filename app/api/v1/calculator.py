@@ -5,18 +5,28 @@ from starlette.background import BackgroundTask
 
 from core.background_tasks import cleanup_file
 from core.dependencies import SessionDep
-from models import Calculation, CalculationBase, CalculationsHistory
+from models import (
+    Calculation,
+    CalculationPayload,
+    CalculationsHistory,
+    CalculatorOperator,
+)
 
 router = APIRouter()
 
 
+@router.get("/helper", response_model=CalculatorOperator, status_code=status.HTTP_200_OK)
+def helper() -> CalculatorOperator:
+    return CalculatorOperator()
+
+
 @router.post("/evaluate", response_model=Calculation, status_code=status.HTTP_201_CREATED)
-def calculate(*, session: SessionDep, calculation: CalculationBase) -> Calculation:
-    calculation = Calculation.model_validate(calculation)
-    session.add(calculation)
+def calculate(*, session: SessionDep, calculation: CalculationPayload) -> Calculation:
+    item = Calculation.model_validate(calculation.model_dump())
+    session.add(item)
     session.commit()
-    session.refresh(calculation)
-    return calculation
+    session.refresh(item)
+    return item
 
 
 @router.get("/history", response_model=CalculationsHistory, status_code=status.HTTP_200_OK)
@@ -37,19 +47,21 @@ def history(session: SessionDep, skip: int = 0, limit: int = 100) -> Calculation
     return CalculationsHistory(data=items, count=count)
 
 
-@router.get("/history/export", status_code=status.HTTP_200_OK, response_class=FileResponse)
-def export(session: SessionDep, skip: int = 0, limit: int = 100) -> FileResponse:
-    statement = (
-        select(Calculation)
-        .order_by(Calculation.created_at)
-        .offset(skip)
-        .limit(limit)
-    )
-    items = session.exec(statement).all()
-    file_name = "export.csv"
-    file_path = f"/tmp/{file_name}"
-    with open(file_path, "w") as f:
-        f.write("text;result\ntest;0\nessai;1")
+@router.get("/history/{calculation_id}", response_model=Calculation, status_code=status.HTTP_200_OK)
+def read_calculation(session: SessionDep, calculation_id: int) -> Calculation:
+    item = session.get(Calculation, calculation_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Calculation ({calculation_id}) not found.")
+    return item
 
-    return FileResponse(path=file_path, filename=file_name, media_type='text/csv',
-                        background=BackgroundTask(cleanup_file, file_path))
+
+@router.patch("/history/{calculation_id}", response_model=Calculation, status_code=status.HTTP_200_OK)
+def modify_calculation(session: SessionDep, calculation_id: int, calculation: CalculationPayload) -> Calculation:
+    item = session.get(Calculation, calculation_id)
+    if not item:
+        raise HTTPException(status_code=404, detail=f"Calculation ({calculation_id}) not found.")
+    item.sqlmodel_update(calculation.model_dump())
+    session.add(item)
+    session.commit()
+    session.refresh(item)
+    return item
