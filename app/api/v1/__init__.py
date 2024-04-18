@@ -1,5 +1,6 @@
-from api.v1 import calculator
 from fastapi import APIRouter
+
+from api.v1 import calculator
 
 __version__ = 1
 

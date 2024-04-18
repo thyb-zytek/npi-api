@@ -2,12 +2,12 @@ import random
 from collections.abc import Generator
 
 import pytest
-from alembic.command import upgrade
-from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlmodel import Session, create_engine
 
+from alembic.command import upgrade
+from alembic.config import Config
 from core.config import Settings
 from core.dependencies import get_db
 from main import app
@@ -18,21 +18,49 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 TestSession = Session(engine)
 
 
-def expression_factory(size: int = 1) -> str:
-    return random.choices([
-        '2 5 +', '4 1 -', '5 2 *', '6 3 /', '10 4 %', "10 3 /", '2 3 ^', '5 !', '9 sqrt', '6 3 /', 'e ln', 'e 8 ^',
-        '100 log', '57 cos', '0.56 acos', '38 sin', '0.94 asin', 'pi tan', '68 tan', '2 3 2 ^ ^', '5 3 ! ^',
-        '2 3 ^ 4 ! *', '5 sin 2 ^ cos', '2 3 + 4 ^ 5 *', '3 ! exp ln',
-        'pi 2 * 3 / sin 3 ^ exp 15 sqrt log * cos 0.2 / exp',
-    ], k=size)
+def expression_factory(size: int = 1) -> list[str]:
+    return random.choices(
+        [
+            "2 5 +",
+            "4 1 -",
+            "5 2 *",
+            "6 3 /",
+            "10 4 %",
+            "10 3 /",
+            "2 3 ^",
+            "5 !",
+            "9 sqrt",
+            "6 3 /",
+            "e ln",
+            "e 8 ^",
+            "100 log",
+            "57 cos",
+            "0.56 acos",
+            "38 sin",
+            "0.94 asin",
+            "pi tan",
+            "68 tan",
+            "2 3 2 ^ ^",
+            "5 3 ! ^",
+            "2 3 ^ 4 ! *",
+            "5 sin 2 ^ cos",
+            "2 3 + 4 ^ 5 *",
+            "3 ! exp ln",
+            "pi 2 * 3 / sin 3 ^ exp 15 sqrt log * cos 0.2 / exp",
+        ],
+        k=size,
+    )
 
 
 @pytest.fixture(scope="function")
-def expressions(request, db) -> list[Calculation]:
+def expressions(request, db: Session) -> list[Calculation]:
     history = []
     for expr in expression_factory(request.param):
         calculation = Calculation.model_validate(
-            CalculationPayload(expression=expr, precision=random.randint(2, 8)).model_dump())
+            CalculationPayload(
+                expression=expr, precision=random.randint(2, 8)
+            ).model_dump()
+        )
         db.add(calculation)
         db.commit()
         db.refresh(calculation)
@@ -48,7 +76,7 @@ def db() -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def client(db) -> Generator[TestClient, None, None]:
+def client(db: Session) -> Generator[TestClient, None, None]:
     def get_test_db():
         return db
 
@@ -59,7 +87,7 @@ def client(db) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def clean_db(db):
+def clean_db(db: Session):
     try:
         db.delete(Calculation)
         db.commit()
@@ -68,7 +96,7 @@ def clean_db(db):
     yield
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config):
     db_uri = str(settings.SQLALCHEMY_DATABASE_URI)
     if database_exists(db_uri):
         drop_database(db_uri)
@@ -78,7 +106,7 @@ def pytest_configure(config):
     with engine.begin() as connection:
         config = Config("alembic.ini")
         if connection is not None:
-            config.attributes['connection'] = connection
+            config.attributes["connection"] = connection
         upgrade(config, "head")
 
     SQLModel.metadata.create_all(engine)

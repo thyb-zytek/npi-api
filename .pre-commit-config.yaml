@@ -12,7 +12,7 @@ repos:
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies: [ pydantic, types-requests ]
+        additional_dependencies: [ pydantic, types-requests, sqlmodel ]
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.2.2
     hooks:
