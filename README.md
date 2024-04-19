@@ -49,11 +49,11 @@ curl -X 'GET' 'http://localhost:8000/healthcheck' -H 'accept: application/json'
 
 Now you can use the RPN APIs.
 
-### URLs
+## Available URLs
 
-🌐 Automatic Interactive Docs (Swagger UI): http://localhost:8000/docs
+🌐 Interactive Docs (Swagger UI): http://localhost:8000/docs
 
-🌐 Automatic Alternative Docs (ReDoc): http://localhost:8000/redoc
+🌐 Alternative Docs (ReDoc): http://localhost:8000/redoc
 
 🌐 APIs: http://localhost:8000/api/v1/rpn
 
