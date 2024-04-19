@@ -1,3 +1,5 @@
+import os.path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
@@ -65,6 +67,7 @@ def test_read_calculation(expressions: list[Calculation], client: TestClient) ->
 def test_read_calculation_not_existing(client: TestClient) -> None:
     response = client.get("api/v1/rpn/history/999")
     assert response.status_code == 404
+    assert response.json() == {"detail": "Calculation (999) not found."}
 
 
 @pytest.mark.parametrize("expressions", [1], indirect=True)
@@ -94,3 +97,21 @@ def test_update_calculation(
 def test_update_calculation_not_existing(client: TestClient) -> None:
     response = client.patch("api/v1/rpn/history/999", json={"expression": "2 10 *"})
     assert response.status_code == 404
+    assert response.json() == {"detail": "Calculation (999) not found."}
+
+
+def test_export_no_history(client: TestClient) -> None:
+    response = client.get("api/v1/rpn/history/export")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No Calculations found."}
+    assert os.path.exists("/tmp/export.csv") is False
+
+
+@pytest.mark.parametrize("expressions", [10], indirect=True)
+def test_export(expressions: list[Calculation], client: TestClient) -> None:
+    response = client.get("api/v1/rpn/history/export")
+    assert response.status_code == 200
+    assert (
+        response.headers["content-disposition"] == 'attachment; filename="export.csv"'
+    )
+    assert os.path.exists("/tmp/export.csv") is False

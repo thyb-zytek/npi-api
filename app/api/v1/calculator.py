@@ -1,6 +1,11 @@
+import os.path
+
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import func, select
+from starlette.background import BackgroundTask
+from starlette.responses import FileResponse
 
+from core.background_tasks import cleanup_file
 from core.dependencies import SessionDep
 from models import (
     Calculation,
@@ -8,6 +13,7 @@ from models import (
     CalculationsHistory,
     CalculatorOperator,
 )
+from tools.export import export_to_csv
 
 router = APIRouter()
 
@@ -42,6 +48,30 @@ def history(
     items = session.exec(statement).all()
 
     return CalculationsHistory(data=items, count=count)
+
+
+@router.get(
+    "/history/export", status_code=status.HTTP_200_OK, response_class=FileResponse
+)
+def export(session: SessionDep) -> FileResponse:
+    statement = select(Calculation).order_by("created_at")
+    items = session.exec(statement).all()
+    if not items:
+        raise HTTPException(status_code=404, detail="No Calculations found.")
+
+    export_file_path = export_to_csv(
+        headers=["expression", "result"],
+        data=[
+            item.model_dump(mode="json", include={"expression", "result"})
+            for item in items
+        ],
+    )
+    return FileResponse(
+        path=export_file_path,
+        filename=os.path.basename(export_file_path),
+        media_type="text/csv",
+        background=BackgroundTask(cleanup_file, export_file_path),
+    )
 
 
 @router.get(

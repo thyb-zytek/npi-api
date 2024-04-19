@@ -1,3 +1,4 @@
+import os
 import random
 from collections.abc import Generator
 
@@ -5,7 +6,7 @@ import pytest
 from _pytest.fixtures import SubRequest
 from fastapi.testclient import TestClient
 from sqlalchemy_utils import create_database, database_exists, drop_database
-from sqlmodel import Session, create_engine
+from sqlmodel import Session, create_engine, delete
 
 from alembic.command import upgrade
 from alembic.config import Config
@@ -90,11 +91,18 @@ def client(db: Session) -> Generator[TestClient, None, None]:
 @pytest.fixture(autouse=True, scope="function")
 def clean_db(db: Session) -> Generator[None, None, None]:
     try:
-        db.delete(Calculation)
+        db.execute(delete(Calculation))
         db.commit()
     except Exception:
         db.rollback()
     yield
+
+
+@pytest.fixture(autouse=True, scope="function")
+def clean_tmp_folder() -> Generator[None, None, None]:
+    yield
+    for file in os.listdir("/tmp"):
+        os.remove(f"/tmp/{file}")
 
 
 def pytest_configure(config: pytest.Config) -> None:
