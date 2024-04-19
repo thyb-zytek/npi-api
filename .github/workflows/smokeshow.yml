@@ -2,8 +2,10 @@ name: Smokeshow
 
 on:
   workflow_run:
-    workflows: [Test]
-    types: [completed]
+    workflows:
+      - Run Tests
+    types:
+      - completed
 
 jobs:
   smokeshow:
