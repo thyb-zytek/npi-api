@@ -7,7 +7,7 @@ OPERATORS: dict[str, tuple[Callable[..., float], int, str]] = {
     "*": (lambda a, b: a * b, 2, "Multiply"),
     "/": (lambda a, b: a / b, 2, "Divide"),
     "%": (lambda a, b: a % b, 2, "Modulus"),
-    "^": (lambda a, b: pow(a, b), 2, "power"),
+    "^": (lambda a, b: pow(a, b), 2, "Power"),
     "exp": (lambda a: math.exp(a), 1, "Exponentiation"),
     "!": (lambda x: math.factorial(int(x)), 1, "Factorial"),
     "sqrt": (lambda x: math.sqrt(x), 1, "Square Root"),

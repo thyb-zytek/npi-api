@@ -40,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-html
-          path: app/htmlcov
           retention-days: 5
+          path: app/htmlcov
