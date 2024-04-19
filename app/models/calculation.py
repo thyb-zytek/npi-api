@@ -14,12 +14,11 @@ class CalculationBase(SQLModel):
 class CalculationPayload(SQLModel):
     expression: str
 
-    @property
     @computed_field
     def result(self) -> float:
         return RPNCalculator(self.expression).solve()
 
-    @field_serializer("result")
+    @field_serializer("result", check_fields=False)
     def serialize_result(self, result: float) -> float:
         return round(result, 10)
 

@@ -13,7 +13,7 @@ from tools.rpn_calculator import RPNCalculator, RPNCalculatorError
         pytest.param("10 4 %", 2),
     ],
 )
-def test_calculate_basic_operators(expression, expected):
+def test_calculate_basic_operators(expression: str, expected: float) -> None:
     assert RPNCalculator(expression).solve() == expected
 
 
@@ -29,7 +29,7 @@ def test_calculate_basic_operators(expression, expected):
         pytest.param("100 log", 2),
     ],
 )
-def test_calculate_advanced_operators(expression, expected):
+def test_calculate_advanced_operators(expression: str, expected: float) -> None:
     assert RPNCalculator(expression).solve() == expected
 
 
@@ -44,7 +44,7 @@ def test_calculate_advanced_operators(expression, expected):
         pytest.param("68 tan", -2.0400815980159464),
     ],
 )
-def test_calculate_trigonometric_operators(expression, expected):
+def test_calculate_trigonometric_operators(expression: str, expected: float) -> None:
     assert RPNCalculator(expression).solve() == expected
 
 
@@ -62,7 +62,7 @@ def test_calculate_trigonometric_operators(expression, expected):
         ),
     ],
 )
-def test_calculate_complex_operators(expression, expected):
+def test_calculate_complex_operators(expression: str, expected: float) -> None:
     assert RPNCalculator(expression).solve() == expected
 
 
@@ -78,7 +78,7 @@ def test_calculate_complex_operators(expression, expected):
         ),
     ],
 )
-def test_calculate_errors_operators(expression, expected):
+def test_calculate_errors_operators(expression: str, expected: str) -> None:
     with pytest.raises(RPNCalculatorError) as exc_info:
         RPNCalculator(expression).solve()
 

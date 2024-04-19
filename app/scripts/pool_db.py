@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
 
 from core.db import engine
@@ -19,7 +19,7 @@ wait_seconds = 2
     before=before_log(logger, logging.INFO),
     after=after_log(logger, logging.WARN),
 )
-def init(session) -> None:
+def init(session: sessionmaker[Session]) -> None:
     db = session()
     try:
         db.execute(text("Select 1"))

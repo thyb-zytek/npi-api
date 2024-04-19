@@ -2,6 +2,7 @@ import random
 from collections.abc import Generator
 
 import pytest
+from _pytest.fixtures import SubRequest
 from fastapi.testclient import TestClient
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from sqlmodel import Session, create_engine
@@ -53,7 +54,7 @@ def expression_factory(size: int = 1) -> list[str]:
 
 
 @pytest.fixture(scope="function")
-def expressions(request, db: Session) -> list[Calculation]:
+def expressions(request: SubRequest, db: Session) -> list[Calculation]:
     history = []
     for expr in expression_factory(request.param):
         calculation = Calculation.model_validate(
@@ -77,7 +78,7 @@ def db() -> Generator[Session, None, None]:
 
 @pytest.fixture
 def client(db: Session) -> Generator[TestClient, None, None]:
-    def get_test_db():
+    def get_test_db() -> Session:
         return db
 
     app.dependency_overrides[get_db] = get_test_db
@@ -87,7 +88,7 @@ def client(db: Session) -> Generator[TestClient, None, None]:
 
 
 @pytest.fixture(autouse=True, scope="function")
-def clean_db(db: Session):
+def clean_db(db: Session) -> Generator[None, None, None]:
     try:
         db.delete(Calculation)
         db.commit()
@@ -96,7 +97,7 @@ def clean_db(db: Session):
     yield
 
 
-def pytest_configure(config: pytest.Config):
+def pytest_configure(config: pytest.Config) -> None:
     db_uri = str(settings.SQLALCHEMY_DATABASE_URI)
     if database_exists(db_uri):
         drop_database(db_uri)
@@ -104,9 +105,9 @@ def pytest_configure(config: pytest.Config):
     create_database(db_uri)
 
     with engine.begin() as connection:
-        config = Config("alembic.ini")
+        alembic_config = Config("alembic.ini")
         if connection is not None:
-            config.attributes["connection"] = connection
-        upgrade(config, "head")
+            alembic_config.attributes["connection"] = connection
+        upgrade(alembic_config, "head")
 
     SQLModel.metadata.create_all(engine)

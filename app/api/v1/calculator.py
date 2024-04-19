@@ -22,8 +22,8 @@ def helper() -> CalculatorOperator:
 @router.post(
     "/evaluate", response_model=Calculation, status_code=status.HTTP_201_CREATED
 )
-def calculate(*, session: SessionDep, calculation: CalculationPayload) -> Calculation:
-    item = Calculation.model_validate(calculation.model_dump())
+def calculate(*, session: SessionDep, payload: CalculationPayload) -> Calculation:
+    item = Calculation.model_validate(payload.model_dump())
     session.add(item)
     session.commit()
     session.refresh(item)

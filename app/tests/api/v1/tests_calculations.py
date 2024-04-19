@@ -48,7 +48,7 @@ def test_history(expressions: list[Calculation], client: TestClient) -> None:
         pytest.param("2 3 + 4 ^ 5 *", 3125),
     ],
 )
-def test_calculate(expression, expected, client: TestClient) -> None:
+def test_calculate(expression: str, expected: float, client: TestClient) -> None:
     response = client.post("api/v1/rpn/evaluate", json={"expression": expression})
     assert response.status_code == 201
     assert response.json()["result"] == expected
@@ -57,7 +57,7 @@ def test_calculate(expression, expected, client: TestClient) -> None:
 @pytest.mark.parametrize("expressions", [1], indirect=True)
 def test_read_calculation(expressions: list[Calculation], client: TestClient) -> None:
     item = expressions[0]
-    response = client.get(f"api/v1/rpn/history/{item}")
+    response = client.get(f"api/v1/rpn/history/{item.id}")
     assert response.status_code == 200
     assert response.json() == item.model_dump(mode="json")
 
