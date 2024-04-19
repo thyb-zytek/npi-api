@@ -22,7 +22,7 @@ jobs:
 
       - uses: dawidd6/action-download-artifact@v3.1.4
         with:
-          workflow: test.yml
+          workflow: tests.yml
           commit: ${{ github.event.workflow_run.head_sha }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
