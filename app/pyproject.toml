@@ -45,7 +45,6 @@ omit = [
     "alembic/*",
     "**/__init__.py",
     "scripts/*",
-    "core/*",
     "tests/*",
 ]
 
